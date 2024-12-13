@@ -288,12 +288,11 @@ function Mark:get_buf_list(bufnr)
 	return items
 end
 
-
 function Mark:get_all_list()
 	local items = {}
 	for bufnr, buffer_state in pairs(self.buffers) do
 		for mark, data in pairs(buffer_state.placed_marks) do
-			if string.match(mark,"[^%w]") ~= nil then
+			if string.match(mark, "[^%w]") ~= nil then
 				goto continue
 			end
 			local status_ok, text = pcall(a.nvim_buf_get_lines, bufnr, data.line - 1, data.line, true)
@@ -310,7 +309,7 @@ function Mark:get_all_list()
 				line = vim.trim(text or ""),
 				path = path
 			})
-		    ::continue::
+			::continue::
 		end
 	end
 	return items
@@ -329,12 +328,16 @@ function Mark:buffer_to_list(list_type, bufnr)
 	local items = {}
 	for mark, data in pairs(self.buffers[bufnr].placed_marks) do
 		local text = a.nvim_buf_get_lines(bufnr, data.line - 1, data.line, true)[1]
+		if text == nil then
+			goto continue
+		end
 		table.insert(items, {
 			bufnr = bufnr,
 			lnum = data.line,
 			col = data.col + 1,
 			text = "mark " .. mark .. ": " .. text
 		})
+	    ::continue::
 	end
 
 	list_fn(items, "r")
@@ -349,12 +352,16 @@ function Mark:all_to_list(list_type)
 	for bufnr, buffer_state in pairs(self.buffers) do
 		for mark, data in pairs(buffer_state.placed_marks) do
 			local text = a.nvim_buf_get_lines(bufnr, data.line - 1, data.line, true)[1]
+			if text == nil then
+				goto continue
+			end
 			table.insert(items, {
 				bufnr = bufnr,
 				lnum = data.line,
 				col = data.col + 1,
 				text = "mark " .. mark .. ": " .. text
 			})
+			::continue::
 		end
 	end
 
@@ -371,6 +378,9 @@ function Mark:global_to_list(list_type)
 		for mark, data in pairs(buffer_state.placed_marks) do
 			if utils.is_upper(mark) then
 				local text = a.nvim_buf_get_lines(bufnr, data.line - 1, data.line, true)[1]
+				if text == nil then
+					goto continue
+				end
 				table.insert(items, {
 					bufnr = bufnr,
 					lnum = data.line,
@@ -378,6 +388,7 @@ function Mark:global_to_list(list_type)
 					text = "mark " .. mark .. ": " .. text
 				})
 			end
+			::continue::
 		end
 	end
 
